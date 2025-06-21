@@ -11,7 +11,7 @@ interface SpouseData {
   uniqueIdentifier: string;
   verified: boolean;
   proofs: ProofResult[];
-  queryResult: any;
+  queryResult: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 }
 
 export default function MarriagePage() {

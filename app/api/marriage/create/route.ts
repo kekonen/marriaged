@@ -79,8 +79,10 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
-    // Generate marriage proof (ZK proof)
-    const marriageProof = await generateMarriageProof(
+    // Generate marriage proof - Edge runtime compatible version
+    // Note: Real circom proof generation would happen in a separate service
+    // due to Edge runtime limitations with heavy cryptographic libraries
+    const marriageProof = await generateSimulatedMarriageProof(
       spouse1Verification.uniqueIdentifier!,
       spouse2Verification.uniqueIdentifier!,
       marriageResult.marriageId as string
@@ -110,28 +112,44 @@ export async function POST(request: Request) {
   }
 }
 
-// Generate marriage proof using circom circuit
-async function generateMarriageProof(
+// Edge runtime compatible marriage proof generation
+// In production, this would be replaced with actual circom proof generation
+async function generateSimulatedMarriageProof(
   spouse1Id: string,
-  spouse2Id: string, 
+  spouse2Id: string,
   marriageId: string
 ): Promise<string> {
-  // In a real implementation, this would:
-  // 1. Use the circom circuit from modifications/marriage_proof.circom
-  // 2. Generate a ZK proof that proves the marriage without revealing identities
-  // 3. Return the proof as a hex string or JSON
-  
-  // For now, we'll generate a simulated proof
+  // Simulate circom proof structure for compatibility
   const proofData = {
-    marriageId,
-    timestamp: Date.now(),
-    spouse1Hash: hashString(spouse1Id),
-    spouse2Hash: hashString(spouse2Id),
-    isMarried: true,
+    proof: {
+      pi_a: ["simulated_a1", "simulated_a2", "1"],
+      pi_b: [["simulated_b1", "simulated_b2"], ["simulated_b3", "simulated_b4"], ["1", "0"]],
+      pi_c: ["simulated_c1", "simulated_c2", "1"],
+      protocol: "groth16",
+      curve: "bn128"
+    },
+    publicSignals: [
+      stringToField(marriageId),
+      Math.floor(Date.now() / 1000).toString(),
+      stringToField(spouse1Id)
+    ],
+    isValid: true,
+    timestamp: Date.now()
   };
+
+  const encoded = Buffer.from(JSON.stringify(proofData)).toString('base64');
+  return `zkproof_${encoded}`;
+}
+
+// Simple field conversion for consistency with circom
+function stringToField(str: string): string {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
   
-  // Simulate ZK proof generation
-  const proof = Buffer.from(JSON.stringify(proofData)).toString('base64');
-  return `zkproof_${proof}`;
+  return Math.abs(hash % 21888242871839275222246405745257275088548364400416034343698204186575808495617).toString();
 }
 
