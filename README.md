@@ -1,39 +1,66 @@
-# ZKPassport SDK Example
+## Foundry
 
-This example demonstrates how to use the ZKPassport SDK for verifying passports and national IDs both for off-chain and on-chain verification.
+**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
 
-## Getting Started
+Foundry consists of:
 
-1. Clone this repository
-2. Install dependencies:
-   ```
-   npm install
-   ```
-3. Start the development server:
-   ```
-   npm run dev
-   ```
+-   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
+-   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
+-   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
+-   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
 
-## Next.js App Structure
+## Documentation
 
-This application uses Next.js App Router with a proper separation of server and client components:
+https://book.getfoundry.sh/
 
-- Server components handle static metadata and app structure
-- Client components manage state, user interactions, and network communications
+## Usage
 
-This architecture ensures optimal performance and SEO while still providing a rich interactive experience.
+### Build
 
-## Learn More
+```shell
+$ forge build
+```
 
-To learn more about Next.js, take a look at the following resources:
+### Test
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```shell
+$ forge test
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Format
 
-## Deploy on Vercel
+```shell
+$ forge fmt
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Gas Snapshots
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```shell
+$ forge snapshot
+```
+
+### Anvil
+
+```shell
+$ anvil
+```
+
+### Deploy
+
+```shell
+$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
+```
+
+### Cast
+
+```shell
+$ cast <subcommand>
+```
+
+### Help
+
+```shell
+$ forge --help
+$ anvil --help
+$ cast --help
+```

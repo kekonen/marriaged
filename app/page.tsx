@@ -1,159 +1,32 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
-import { ZKPassport, ProofResult, EU_COUNTRIES } from "@zkpassport/sdk";
-import QRCode from "react-qr-code";
+import Link from "next/link";
 
 export default function Home() {
-  const [message, setMessage] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [isEUCitizen, setIsEUCitizen] = useState<boolean | undefined>(undefined);
-  const [isOver18, setIsOver18] = useState<boolean | undefined>(undefined);
-  const [queryUrl, setQueryUrl] = useState("");
-  const [uniqueIdentifier, setUniqueIdentifier] = useState("");
-  const [verified, setVerified] = useState<boolean | undefined>(undefined);
-  const [requestInProgress, setRequestInProgress] = useState(false);
-  const zkPassportRef = useRef<ZKPassport | null>(null);
-
-  useEffect(() => {
-    if (!zkPassportRef.current) {
-      zkPassportRef.current = new ZKPassport(window.location.hostname);
-    }
-  }, []);
-
-  const createRequest = async () => {
-    if (!zkPassportRef.current) {
-      return;
-    }
-    setFirstName("");
-    setIsEUCitizen(undefined);
-    setMessage("");
-    setQueryUrl("");
-    setIsOver18(undefined);
-    setUniqueIdentifier("");
-    setVerified(undefined);
-
-    const queryBuilder = await zkPassportRef.current.request({
-      name: "ZKPassport",
-      logo: "https://zkpassport.id/favicon.png",
-      purpose: "Proof of EU citizenship and firstname",
-      scope: "eu-adult",
-      mode: "fast",
-      devMode: true,
-    });
-
-    const {
-      url,
-      onRequestReceived,
-      onGeneratingProof,
-      onProofGenerated,
-      onResult,
-      onReject,
-      onError,
-    } = queryBuilder
-      .in("issuing_country", [...EU_COUNTRIES, "Zero Knowledge Republic"])
-      .disclose("firstname")
-      .gte("age", 18)
-      .disclose("document_type")
-      .done();
-
-    setQueryUrl(url);
-    console.log(url);
-
-    setRequestInProgress(true);
-
-    onRequestReceived(() => {
-      console.log("QR code scanned");
-      setMessage("Request received");
-    });
-
-    onGeneratingProof(() => {
-      console.log("Generating proof");
-      setMessage("Generating proof...");
-    });
-
-    const proofs: ProofResult[] = [];
-
-    onProofGenerated((result: ProofResult) => {
-      console.log("Proof result", result);
-      proofs.push(result);
-      setMessage(`Proofs received`);
-      setRequestInProgress(false);
-    });
-
-    onResult(async ({ result, uniqueIdentifier, verified, queryResultErrors }) => {
-      console.log("Result of the query", result);
-      console.log("Query result errors", queryResultErrors);
-      setFirstName(result?.firstname?.disclose?.result);
-      setIsEUCitizen(result?.nationality?.in?.result);
-      setIsOver18(result?.age?.gte?.result);
-      setMessage("Result received");
-      setUniqueIdentifier(uniqueIdentifier || "");
-      setVerified(verified);
-      setRequestInProgress(false);
-
-      const res = await fetch("/api/register", {
-        method: "POST",
-        body: JSON.stringify({
-          queryResult: result,
-          proofs,
-          domain: window.location.hostname,
-        }),
-      });
-
-      console.log("Response from the server", await res.json());
-    });
-
-    onReject(() => {
-      console.log("User rejected");
-      setMessage("User rejected the request");
-      setRequestInProgress(false);
-    });
-
-    onError((error: unknown) => {
-      console.error("Error", error);
-      setMessage("An error occurred");
-      setRequestInProgress(false);
-    });
-  };
-
   return (
-    <main className="w-full h-full flex flex-col items-center p-10">
-      {queryUrl && <QRCode className="mb-4" value={queryUrl} />}
-      {message && <p>{message}</p>}
-      {firstName && (
-        <p className="mt-2">
-          <b>Firstname:</b> {firstName}
-        </p>
-      )}
-      {typeof isEUCitizen === "boolean" && (
-        <p className="mt-2">
-          <b>Is EU citizen:</b> {isEUCitizen ? "Yes" : "No"}
-        </p>
-      )}
-      {typeof isOver18 === "boolean" && (
-        <p className="mt-2">
-          <b>Is over 18:</b> {isOver18 ? "Yes" : "No"}
-        </p>
-      )}
-      {uniqueIdentifier && (
-        <p className="mt-2">
-          <b>Unique identifier:</b>
-        </p>
-      )}
-      {uniqueIdentifier && <p>{uniqueIdentifier}</p>}
-      {verified !== undefined && (
-        <p className="mt-2">
-          <b>Verified:</b> {verified ? "Yes" : "No"}
-        </p>
-      )}
-      {!requestInProgress && (
-        <button
-          className="p-4 mt-4 bg-gray-500 rounded-lg text-white font-medium"
-          onClick={createRequest}
+    <main className="w-full h-full flex flex-col items-center justify-center p-10">
+      <h1 className="text-4xl font-bold mb-8 text-center">
+        💑 ZK Marriage Registry
+      </h1>
+      <p className="text-lg text-gray-600 mb-8 text-center max-w-2xl">
+        Get married in zero-knowledge! Prove you&apos;re both 18+ and single without revealing your identity.
+        Create a privacy-preserving marriage certificate on the blockchain.
+      </p>
+      
+      <div className="flex flex-col sm:flex-row gap-4">
+        <Link 
+          href="/marriage"
+          className="px-8 py-4 bg-pink-500 hover:bg-pink-600 text-white font-semibold rounded-lg text-center transition-colors"
         >
-          Generate new request
-        </button>
-      )}
+          💍 Get Married
+        </Link>
+        
+        <Link 
+          href="/verify"
+          className="px-8 py-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg text-center transition-colors"
+        >
+          🔍 Verify Marriage
+        </Link>
+      </div>
     </main>
   );
 }
