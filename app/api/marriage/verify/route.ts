@@ -28,6 +28,8 @@ export async function POST(request: Request) {
       });
     }
 
+    let proofData_base64 = marriageProof.replace("zkproof_", "");
+
     // Decode the simulated proof (Edge runtime compatible)
     const proofData = decodeSimulatedProof(proofData_base64);
     if (!proofData) {
@@ -83,7 +85,6 @@ async function extractMarriageDetails(
   error?: string;
   marriageId?: string;
   marriageDate?: number;
-  spouseName?: string;
   isActive?: boolean;
 }> {
   try {
@@ -100,6 +101,7 @@ async function extractMarriageDetails(
 
     // Verify that the requester matches the user
     const userHash = stringToField(userIdentifier);
+    console.log("User hash unifier:", userHash);
     if (requesterNullifier !== userHash) {
       return {
         isValid: false,
@@ -121,7 +123,6 @@ async function extractMarriageDetails(
       isValid: true,
       marriageId: marriageId,
       marriageDate: parseInt(timestamp) * 1000, // Convert to milliseconds
-      spouseName: "Your Spouse", // In a real implementation, this would be extracted from blockchain
       isActive: true,
     };
 

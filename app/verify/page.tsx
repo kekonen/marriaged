@@ -68,8 +68,12 @@ export default function VerifyPage() {
 
     onResult(async ({ result, uniqueIdentifier, verified }) => {
       if (verified) {
+
+        let firstName = result?.firstname?.disclose?.result || "";
+        let uniqueIdentifier1 = uniqueIdentifier + firstName || "";
+
         setPassportVerified(true);
-        setUserIdentifier(uniqueIdentifier || "");
+        setUserIdentifier(uniqueIdentifier1 || "");
         setMessage("✅ Passport verified! Now enter your marriage proof.");
       } else {
         setMessage("❌ Passport verification failed");
@@ -208,8 +212,7 @@ export default function VerifyPage() {
                 </h3>
                 <div className="text-green-700">
                   <p><strong>Marriage ID:</strong> {verificationResult.marriageId}</p>
-                  <p><strong>Marriage Date:</strong> {new Date(verificationResult.marriageDate).toLocaleDateString()}</p>
-                  <p><strong>Spouse Name:</strong> {verificationResult.spouseName}</p>
+                  {/* <p><strong>Marriage Date:</strong> {new Date(verificationResult.marriageDate).toLocaleDateString()}</p> */}
                   <p><strong>Status:</strong> {verificationResult.isActive ? "Active" : "Dissolved"}</p>
                 </div>
               </div>
