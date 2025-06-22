@@ -399,6 +399,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-*© 2035 Marrgiaged. Built for privacy, powered by love.*
+*© 2035 Marriaged. Built for privacy, powered by love.*
 
 </div>
