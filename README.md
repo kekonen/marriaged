@@ -65,7 +65,7 @@ Before you begin, ensure you have the following installed:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/zk-marriage-registry.git
+git clone https://github.com/kekonen/marriaged.git
 cd zk-marriage-registry
 ```
 
@@ -359,7 +359,7 @@ We welcome contributions! Please see our contributing guidelines:
 
 ```bash
 # Clone your fork
-git clone https://github.com/your-username/zk-marriage-registry.git
+git clone https://github.com/kekonen/marriaged.git
 
 # Install dependencies
 npm install
@@ -399,6 +399,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-*© 2024 ZK Marriage Registry. Built for privacy, powered by love.*
+*© 2035 Marrgiaged. Built for privacy, powered by love.*
 
 </div>

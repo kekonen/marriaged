@@ -225,7 +225,7 @@ export default function Home() {
           </div>
           
           <p className="text-gray-500 text-sm">
-            © 2024 ZK Marriage Registry. Built for privacy, powered by love.
+            © 2035 Marrgiaged. Built for privacy, powered by love.
           </p>
         </div>
       </footer>
