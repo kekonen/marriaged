@@ -28,8 +28,27 @@ export async function POST(request: Request) {
       });
     }
 
-    // Decode and verify the proof
-    const proofResult = await verifyMarriageProof(userIdentifier, marriageProof);
+    let proofData_base64 = marriageProof.replace("zkproof_", "");
+
+    // Decode the simulated proof (Edge runtime compatible)
+    const proofData = decodeSimulatedProof(proofData_base64);
+    if (!proofData) {
+      return Response.json({
+        isValid: false,
+        error: "Invalid proof format - could not decode"
+      });
+    }
+
+    // Verify the simulated proof structure
+    if (!proofData.isValid || !proofData.proof || !proofData.publicSignals) {
+      return Response.json({
+        isValid: false,
+        error: "Invalid proof structure"
+      });
+    }
+
+    // Extract marriage details from public signals
+    const proofResult = await extractMarriageDetails(userIdentifier, proofData);
 
     return Response.json(proofResult);
 
@@ -42,40 +61,48 @@ export async function POST(request: Request) {
   }
 }
 
-async function verifyMarriageProof(
+// Edge runtime compatible proof decoding
+function decodeSimulatedProof(encodedProof: string): { 
+  proof: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+  publicSignals: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+  timestamp: number; 
+  isValid: boolean; 
+} | null {
+  try {
+    const proofData = JSON.parse(Buffer.from(encodedProof, 'base64').toString());
+    return proofData;
+  } catch (error) {
+    console.error("Error decoding proof:", error);
+    return null;
+  }
+}
+
+async function extractMarriageDetails(
   userIdentifier: string, 
-  marriageProof: string
+  proofData: { proof: any; publicSignals: any; timestamp: number } // eslint-disable-line @typescript-eslint/no-explicit-any
 ): Promise<{
   isValid: boolean;
   error?: string;
   marriageId?: string;
   marriageDate?: number;
-  spouseName?: string;
   isActive?: boolean;
 }> {
   try {
-    // Remove the "zkproof_" prefix and decode
-    const proofData = marriageProof.replace("zkproof_", "");
-    const decodedProof = JSON.parse(Buffer.from(proofData, 'base64').toString());
+    // Extract data from public signals
+    // Public signals for our circuit: [marriageId, timestamp, requesterNullifier]
+    const [marriageId, timestamp, requesterNullifier] = proofData.publicSignals;
 
-    console.log("Decoded marriage proof:", decodedProof);
+    console.log("Extracted from proof:", {
+      marriageId,
+      timestamp,
+      requesterNullifier,
+      userIdentifier
+    });
 
-    // In a real implementation, this would:
-    // 1. Verify the ZK proof using the circom verifier
-    // 2. Check that the proof corresponds to the user's identifier
-    // 3. Verify the marriage is still active on the blockchain
-    
-    // Simulate proof verification
-    if (!decodedProof.marriageId || !decodedProof.isMarried) {
-      return {
-        isValid: false,
-        error: "Invalid proof structure"
-      };
-    }
-
-    // Check if user is part of this marriage
-    const userHash = hashString(userIdentifier);
-    if (decodedProof.spouse1Hash !== userHash && decodedProof.spouse2Hash !== userHash) {
+    // Verify that the requester matches the user
+    const userHash = stringToField(userIdentifier);
+    console.log("User hash unifier:", userHash);
+    if (requesterNullifier !== userHash) {
       return {
         isValid: false,
         error: "This marriage certificate does not belong to you"
@@ -83,7 +110,7 @@ async function verifyMarriageProof(
     }
 
     // Simulate blockchain verification of marriage status
-    const isMarriageActive = await verifyMarriageOnBlockchain(decodedProof.marriageId);
+    const isMarriageActive = await verifyMarriageOnBlockchain(marriageId);
     
     if (!isMarriageActive) {
       return {
@@ -92,24 +119,32 @@ async function verifyMarriageProof(
       };
     }
 
-    // Determine spouse name (simulate)
-    const spouseName = decodedProof.spouse1Hash === userHash ? "Partner B" : "Partner A";
-
     return {
       isValid: true,
-      marriageId: decodedProof.marriageId,
-      marriageDate: decodedProof.timestamp,
-      spouseName,
+      marriageId: marriageId,
+      marriageDate: parseInt(timestamp) * 1000, // Convert to milliseconds
       isActive: true,
     };
 
   } catch (error) {
-    console.error("Proof verification error:", error);
+    console.error("Error extracting marriage details:", error);
     return {
       isValid: false,
-      error: "Failed to verify proof"
+      error: "Failed to extract marriage details"
     };
   }
+}
+
+// Helper function to convert string to field (same as in circom-proof.ts)
+function stringToField(str: string): string {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  
+  return Math.abs(hash % 21888242871839275222246405745257275088548364400416034343698204186575808495617).toString();
 }
 
 async function verifyMarriageOnBlockchain(marriageId: string): Promise<boolean> {
@@ -123,12 +158,3 @@ async function verifyMarriageOnBlockchain(marriageId: string): Promise<boolean> 
   return hash % 20 !== 0; // 95% chance of being valid
 }
 
-function hashString(str: string): string {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32-bit integer
-  }
-  return Math.abs(hash).toString(16);
-}

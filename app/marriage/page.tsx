@@ -11,7 +11,7 @@ interface SpouseData {
   uniqueIdentifier: string;
   verified: boolean;
   proofs: ProofResult[];
-  queryResult: any;
+  queryResult: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 }
 
 export default function MarriagePage() {
@@ -94,15 +94,18 @@ export default function MarriagePage() {
         return;
       }
 
+      let firstName = result?.firstname?.disclose?.result || "";
+
       const spouseData: SpouseData = {
-        firstName: result?.firstname?.disclose?.result || "",
+        firstName: firstName,
         isOver18: result?.age?.gte?.result || false,
-        uniqueIdentifier: uniqueIdentifier || "",
+        uniqueIdentifier: uniqueIdentifier + firstName || "",
         verified,
         proofs,
         queryResult: result,
       };
 
+      // todo: move check to frontend
       // Check marriage status with backend
       const marriageCheckRes = await fetch("/api/marriage/check", {
         method: "POST",

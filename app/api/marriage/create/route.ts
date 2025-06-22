@@ -47,15 +47,19 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
+    let spouse1IdentifierLOLUseThis = spouse1.uniqueIdentifier;// spouse1Verification.uniqueIdentifier;
+    let spouse2IdentifierLOLUseThis = spouse2.uniqueIdentifier;// spouse2Verification.uniqueIdentifier;
+
     console.log("Creating marriage for:", {
-      spouse1: spouse1Verification.uniqueIdentifier,
-      spouse2: spouse2Verification.uniqueIdentifier,
+      spouse1: spouse1IdentifierLOLUseThis,
+      spouse2: spouse2IdentifierLOLUseThis,
     });
 
+
     // Create marriage on blockchain using real smart contract
-    const spouse1Nullifier = stringToBytes32(spouse1Verification.uniqueIdentifier!);
-    const spouse2Nullifier = stringToBytes32(spouse2Verification.uniqueIdentifier!);
-    const marriageId = generateMarriageId(spouse1Verification.uniqueIdentifier!, spouse2Verification.uniqueIdentifier!);
+    const spouse1Nullifier = stringToBytes32(spouse1IdentifierLOLUseThis!);
+    const spouse2Nullifier = stringToBytes32(spouse2IdentifierLOLUseThis!);
+    const marriageId = generateMarriageId(spouse1IdentifierLOLUseThis!, spouse2IdentifierLOLUseThis!);
     const proof1Hash = stringToBytes32(JSON.stringify(spouse1.proofs));
     const proof2Hash = stringToBytes32(JSON.stringify(spouse2.proofs));
 
@@ -79,10 +83,18 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
-    // Generate marriage proof (ZK proof)
-    const marriageProof = await generateMarriageProof(
-      spouse1Verification.uniqueIdentifier!,
-      spouse2Verification.uniqueIdentifier!,
+    // const spouse1UniqueIdentifier = await hashWithSalt(
+    //   spouse1Verification.uniqueIdentifier!, "spouse1");
+
+    // const spouse2UniqueIdentifier = await hashWithSalt(
+    //   spouse2Verification.uniqueIdentifier!, "spouse1");
+
+    // Generate marriage proof - Edge runtime compatible version
+    // Note: Real circom proof generation would happen in a separate service
+    // due to Edge runtime limitations with heavy cryptographic libraries
+    const marriageProof = await generateSimulatedMarriageProof(
+      spouse1IdentifierLOLUseThis!, // spouse1Verification.uniqueIdentifier!,
+      spouse2IdentifierLOLUseThis!, // spouse2Verification.uniqueIdentifier!,
       marriageResult.marriageId as string
     );
 
@@ -90,8 +102,8 @@ export async function POST(request: Request) {
       success: true,
       marriageId: marriageResult.marriageId,
       marriageProof,
-      spouse1Id: spouse1Verification.uniqueIdentifier,
-      spouse2Id: spouse2Verification.uniqueIdentifier,
+      spouse1Id: spouse1IdentifierLOLUseThis,
+      spouse2Id: spouse2IdentifierLOLUseThis,
       contractData: {
         spouse1Nullifier: marriageResult.spouse1Nullifier,
         spouse2Nullifier: marriageResult.spouse2Nullifier,
@@ -110,28 +122,56 @@ export async function POST(request: Request) {
   }
 }
 
-// Generate marriage proof using circom circuit
-async function generateMarriageProof(
-  spouse1Id: string,
-  spouse2Id: string, 
-  marriageId: string
-): Promise<string> {
-  // In a real implementation, this would:
-  // 1. Use the circom circuit from modifications/marriage_proof.circom
-  // 2. Generate a ZK proof that proves the marriage without revealing identities
-  // 3. Return the proof as a hex string or JSON
-  
-  // For now, we'll generate a simulated proof
-  const proofData = {
-    marriageId,
-    timestamp: Date.now(),
-    spouse1Hash: hashString(spouse1Id),
-    spouse2Hash: hashString(spouse2Id),
-    isMarried: true,
-  };
-  
-  // Simulate ZK proof generation
-  const proof = Buffer.from(JSON.stringify(proofData)).toString('base64');
-  return `zkproof_${proof}`;
+// Hashes a value with a salt using SHA-256 and returns a hex string
+export async function hashWithSalt(value: string | undefined, salt: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(value || "" + salt);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  // Convert buffer to hex string
+  return Array.from(new Uint8Array(hashBuffer))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
 }
 
+// Edge runtime compatible marriage proof generation
+// In production, this would be replaced with actual circom proof generation
+async function generateSimulatedMarriageProof(
+  spouse1Id: string,
+  spouse2Id: string,
+  marriageId: string
+): Promise<string> {
+
+  console.log("Generating simulated marriage proof for:", spouse1Id, stringToField(spouse1Id));
+  // Simulate circom proof structure for compatibility
+  const proofData = {
+    proof: {
+      pi_a: ["simulated_a1", "simulated_a2", "1"],
+      pi_b: [["simulated_b1", "simulated_b2"], ["simulated_b3", "simulated_b4"], ["1", "0"]],
+      pi_c: ["simulated_c1", "simulated_c2", "1"],
+      protocol: "groth16",
+      curve: "bn128"
+    },
+    publicSignals: [
+      stringToField(marriageId),
+      Math.floor(Date.now() / 1000).toString(),
+      stringToField(spouse1Id)
+    ],
+    isValid: true,
+    timestamp: Date.now()
+  };
+
+  const encoded = Buffer.from(JSON.stringify(proofData)).toString('base64');
+  return `zkproof_${encoded}`;
+}
+
+// Simple field conversion for consistency with circom
+function stringToField(str: string): string {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  
+  return Math.abs(hash % 21888242871839275222246405745257275088548364400416034343698204186575808495617).toString();
+}
