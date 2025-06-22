@@ -69,12 +69,17 @@ export default function WalletConnect({ onConnect, onDisconnect }: WalletConnect
 
   if (account) {
     return (
-      <div className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-        <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-        <span className="font-mono text-sm">{formatAddress(account)}</span>
+      <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl shadow-sm">
+        <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+        <div className="flex items-center">
+          <svg className="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v2a2 2 0 002 2" />
+          </svg>
+          <span className="font-mono text-sm font-semibold text-gray-800">{formatAddress(account)}</span>
+        </div>
         <button
           onClick={disconnectWallet}
-          className="text-xs text-gray-500 hover:text-gray-700"
+          className="text-xs text-gray-500 hover:text-red-600 font-medium transition-colors duration-200"
         >
           Disconnect
         </button>
@@ -86,9 +91,23 @@ export default function WalletConnect({ onConnect, onDisconnect }: WalletConnect
     <button
       onClick={connectWallet}
       disabled={isConnecting}
-      className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg disabled:opacity-50"
+      className="group px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:transform-none"
     >
-      {isConnecting ? 'Connecting...' : '🔗 Connect Wallet'}
+      <span className="flex items-center justify-center">
+        {isConnecting ? (
+          <>
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+            Connecting...
+          </>
+        ) : (
+          <>
+            🔗 Connect Wallet
+            <svg className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </>
+        )}
+      </span>
     </button>
   );
 }
