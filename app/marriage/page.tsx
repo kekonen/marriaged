@@ -65,7 +65,7 @@ export default function MarriagePage() {
       onReject,
       onError,
     } = queryBuilder
-      .in("issuing_country", [...EU_COUNTRIES, "Zero Knowledge Republic"])
+      .in("issuing_country", [...EU_COUNTRIES, "Zero Knowledge Republic", "Ukraine"])
       .disclose("firstname")
       .gte("age", 18)
       .done();
