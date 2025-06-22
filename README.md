@@ -133,7 +133,7 @@ npm run dev
 ### 6. Test the Marriage Flow
 
 1. **Connect Wallet** - Connect MetaMask to Sepolia testnet
-2. **Get Married** - Click "💍 Get Married Privately"
+2. **Get Married** - Click "💍 Get Marriaged Privately"
 3. **Verify Partners** - Both partners scan QR codes with zkPassport app
 4. **Create Certificate** - Generate your zero-knowledge marriage certificate
 5. **Verify Certificate** - Use the verification page to prove marriage status

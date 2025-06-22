@@ -325,7 +325,7 @@ export default function MarriagePage() {
       <div className="container mx-auto px-6 pt-12 pb-8">
         <div className="text-center mb-8">
           <h1 className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-pink-400 via-purple-500 to-blue-500 bg-clip-text text-transparent">
-            💍 Get Married Privately
+            💍 Get Marriaged Privately
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
             Create your zero-knowledge marriage certificate. Both partners scan QR codes to prove eligibility without revealing personal data.
